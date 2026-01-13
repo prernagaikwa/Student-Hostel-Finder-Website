@@ -27,5 +27,5 @@ A PHP + MySQL based web application where:
 
 ## Screenshots
 (Add screenshots here)
-<img width="901" height="791" alt="image" src="https://github.com/user-attachments/assets/3d6261d7-0318-440e-99d1-4d3e645d8242" />
+<img width="150" height="200" alt="image" src="https://github.com/user-attachments/assets/3d6261d7-0318-440e-99d1-4d3e645d8242" />
 

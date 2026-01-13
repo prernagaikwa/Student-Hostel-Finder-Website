@@ -28,4 +28,8 @@ A PHP + MySQL based web application where:
 ## Screenshots
 (Add screenshots here)
 <img width="250" height="200" alt="image" src="https://github.com/user-attachments/assets/3d6261d7-0318-440e-99d1-4d3e645d8242" />
+<img width="658" height="804" alt="image" src="https://github.com/user-attachments/assets/519fbb29-f66d-43f5-8a8a-0df5365f6487" />
+<img width="828" height="737" alt="image" src="https://github.com/user-attachments/assets/1fe5f7c4-433f-42ff-abc7-7b6a24e3da8e" />
+
+
 

@@ -1,148 +1,177 @@
 <?php
-// Database connection
-$host = "localhost";
-$username = "root";
-$password = "";
-$database = "form_data";
+// ✅ SHOW ERRORS (temporary for debugging on hosting)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
-$conn = new mysqli($host, $username, $password, $database,3307);
+// ✅ LOG ERRORS
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/php_error.log');
 
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+// ✅ connect database
+include("db_connect_hosting.php");
 
-// Handle form submission
+// ✅ messages
+$success_message = "";
+$error_message = "";
+
+// ✅ Handle form submit
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name = $_POST['name'];
-    $gender = $_POST['gender'];
-    $address = $_POST['address'];
-    $location = $_POST['location'];
-    $available_beds = $_POST['available_beds'];
-    $rent = $_POST['rent'];
-   // $price = $_POST['price'];
-    $image_path = 'uploads/' . basename($_FILES['image']['name']);
 
-    // File upload
-    if (move_uploaded_file($_FILES['image']['tmp_name'], $image_path)) {
-        $stmt = $conn->prepare("
-           INSERT INTO hostels (name, gender, address, location, available_beds, rent, image_path)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
- 
-        ");
-      //  $stmt->bind_param("ssssiiis", $name, $gender, $address, $location, $available_beds, $rent, $price, $image_path);
-        $stmt->bind_param("ssssiis", $name, $gender, $address, $location, $available_beds, $rent, $image_path);
+    $name = trim($_POST['name'] ?? '');
+    $gender = trim($_POST['gender'] ?? '');
+    $address = trim($_POST['address'] ?? '');
+    $location = trim($_POST['location'] ?? '');
+    $available_beds = (int)($_POST['available_beds'] ?? 0);
+    $rent = (int)($_POST['rent'] ?? 0);
 
-        if ($stmt->execute()) {
-            $success_message = "✅ Hostel registered successfully! It will now appear to students.";
-        } else {
-            $error_message = "❌ Error: " . $stmt->error;
-        }
-        $stmt->close();
+    // ✅ Upload Folder
+    $upload_folder = "uploads/";
+
+    // ✅ Check uploads folder exists
+    if (!is_dir($upload_folder)) {
+        mkdir($upload_folder, 0777, true);
+    }
+
+    // ✅ File Upload check
+    if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+        $error_message = "❌ Image upload failed! Code: " . ($_FILES['image']['error'] ?? 'No file');
     } else {
-        $error_message = "❌ Failed to upload image.";
+
+        $file_name = time() . "_" . basename($_FILES['image']['name']);
+        $image_path = $upload_folder . $file_name;
+
+        if (move_uploaded_file($_FILES['image']['tmp_name'], $image_path)) {
+
+            // ✅ Insert query
+            $stmt = $conn->prepare("
+                INSERT INTO hostels (name, gender, address, location, available_beds, rent, image_path)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ");
+
+            if ($stmt) {
+                $stmt->bind_param("ssssiis", $name, $gender, $address, $location, $available_beds, $rent, $image_path);
+
+                if ($stmt->execute()) {
+                    $success_message = "✅ Hostel Registered Successfully!";
+                } else {
+                    $error_message = "❌ Database Error: " . $stmt->error;
+                }
+
+                $stmt->close();
+            } else {
+                $error_message = "❌ Prepare statement failed: " . $conn->error;
+            }
+
+        } else {
+            $error_message = "❌ Failed to move uploaded image!";
+        }
     }
 }
-
-$conn->close();
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register Hostel</title>
-    <link rel="stylesheet" href="css/bootstrap.css">
-    <style>
-        body {
-            background: linear-gradient(135deg, #5563DE, #74ABE2);
-            font-family: 'Poppins', sans-serif;
-        }
-        .container {
-            max-width: 600px;
-            margin-top: 60px;
-            background: #fff;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-        h2 {
-            text-align: center;
-            margin-bottom: 25px;
-            font-weight: 600;
-            color: #333;
-        }
-        .btn-primary {
-            background-color: #5563DE;
-            border: none;
-            font-weight: 600;
-            transition: 0.3s ease;
-        }
-        .btn-primary:hover {
-            background-color: #3945b6;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Owner Hostel Registration | HostelHunt</title>
+
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+  <style>
+    body{
+      background: linear-gradient(135deg, #74ABE2, #5563DE);
+      font-family: 'Poppins', sans-serif;
+      min-height: 100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+    }
+    .card{
+      width:100%;
+      max-width:550px;
+      border-radius:15px;
+      padding:25px;
+      box-shadow:0 8px 25px rgba(0,0,0,0.2);
+    }
+    .btn-primary{
+      background:#5563DE;
+      border:none;
+      font-weight:600;
+    }
+    .btn-primary:hover{
+      background:#3945b6;
+    }
+  </style>
 </head>
+
 <body>
-    <div class="container">
-        <h2>Hostel Registration</h2>
-        <?php if (isset($success_message)) { ?>
-            <div class="alert alert-success"><?php echo $success_message; ?></div>
-        <?php } ?>
-        <?php if (isset($error_message)) { ?>
-            <div class="alert alert-danger"><?php echo $error_message; ?></div>
-        <?php } ?>
 
-        <form method="POST" enctype="multipart/form-data">
-            <div class="form-group">
-                <label>Hostel Name</label>
-                <input type="text" class="form-control" name="name" required>
-            </div>
+<div class="card">
+  <h2 class="text-center mb-3">🏠 Owner Hostel Registration</h2>
+  <p class="text-center text-muted">Add hostel details so students can find it</p>
 
-            <div class="form-group">
-                <label>Gender</label>
-                <select class="form-control" name="gender" required>
-                    <option value="">Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                </select>
-            </div>
+  <!-- ✅ messages -->
+  <?php if (!empty($success_message)) { ?>
+    <div class="alert alert-success"><?= $success_message ?></div>
+  <?php } ?>
 
-            <div class="form-group">
-                <label>Address</label>
-                <textarea class="form-control" name="address" rows="3" required></textarea>
-            </div>
+  <?php if (!empty($error_message)) { ?>
+    <div class="alert alert-danger"><?= $error_message ?></div>
+  <?php } ?>
 
-            <div class="form-group">
-                <label>City / Location</label>
-                <input type="text" class="form-control" name="location" required>
-            </div>
+  <!-- ✅ FORM -->
+  <form method="POST" enctype="multipart/form-data">
 
-            <div class="form-group">
-                <label>Available Beds</label>
-                <input type="number" class="form-control" name="available_beds" required>
-            </div>
-
-            <div class="form-group">
-                <label>Rent (per month)</label>
-                <input type="number" class="form-control" name="rent" required>
-            </div>
-
-           <!-- // <div class="form-group">
-             //   <label>Price (Total or Other)</label>
-                //<input type="number" class="form-control" name="price" required>
-           // </div> -->
-
-            <div class="form-group">
-                <label>Upload Hostel Image</label>
-                <input type="file" class="form-control-file" name="image" accept="image/*" required>
-            </div>
-
-            <button type="submit" class="btn btn-primary btn-block">Register Hostel</button>
-        </form>
+    <div class="mb-3">
+      <label class="form-label">Hostel Name</label>
+      <input type="text" class="form-control" name="name" required>
     </div>
 
-    <script src="js/jquery-3.4.1.min.js"></script>
-    <script src="js/bootstrap.js"></script>
+    <div class="mb-3">
+      <label class="form-label">Gender</label>
+      <select class="form-control" name="gender" required>
+        <option value="">Select Gender</option>
+        <option value="Male">Male Hostel</option>
+        <option value="Female">Female Hostel</option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Address</label>
+      <textarea class="form-control" name="address" rows="3" required></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Location / City</label>
+      <input type="text" class="form-control" name="location" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Available Beds</label>
+      <input type="number" class="form-control" name="available_beds" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Rent (per month)</label>
+      <input type="number" class="form-control" name="rent" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Upload Hostel Image</label>
+      <input type="file" class="form-control" name="image" accept="image/*" required>
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100">Register Hostel</button>
+
+    <div class="text-center mt-3">
+      <a href="index.php" class="text-decoration-none">← Back to Home</a>
+    </div>
+
+  </form>
+</div>
+
 </body>
 </html>

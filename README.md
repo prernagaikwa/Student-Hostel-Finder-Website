@@ -1,8 +1,20 @@
-# Student Hostel Finder Website 🏠
 
-A PHP + MySQL based web application where:
-- Hostel Owners can register their hostel
-- Students can search hostels by gender and location
+# 🏠 HostelHunt - Student Hostel Finder Website
+A web-based application that helps students find hostels/PGs easily with filters like gender and location.  
+Hostel owners can also register hostels with rent, beds and images.
+
+---
+## 🚀 Live Demo (Hosted)
+
+🔗 Website: https://hostelhunt.infinityfreeapp.com/
+
+---
+
+## 💻 Localhost Demo (XAMPP)
+
+✅ Open in browser:
+
+http://localhost/Student-Hostel-Finder-Website-main/
 
 ## Tech Stack
 - PHP

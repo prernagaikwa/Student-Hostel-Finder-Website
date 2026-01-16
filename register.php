@@ -1,12 +1,50 @@
+<?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+include("db_connect_hosting.php");
+
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Handle form submission
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+    $name = $_POST['name'];
+    $contactNumber = $_POST['contactNumber'];
+    $collegeName = $_POST['collegeName'];
+    $gender = $_POST['gender'];
+    $email = $_POST['email'];
+    $password = $_POST['password'];
+
+    // Insert into students table
+    
+     $stmt = $conn->prepare("INSERT INTO students (name, contactNumber, collegeName, gender, email, password) VALUES (?, ?, ?, ?, ?, ?)");
+     $stmt->bind_param("ssssss", $name, $contactNumber, $collegeName, $gender, $email, $password);
+
+
+    if ($stmt->execute()) {
+        header("Location: student_dashboard.php?gender=" . $gender);
+        exit();
+    } else {
+        echo "<p style='color: red; text-align:center;'>Error: " . $stmt->error . "</p>";
+    }
+
+    $stmt->close();
+    $conn->close();
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Registration</title>
+    <title>Student Registration</title>
 
     <style>
-        /* Reset */
         * {
             margin: 0;
             padding: 0;
@@ -75,69 +113,13 @@
         button:hover {
             background: #3b4fc3;
         }
-
-        .owner-btn {
-            display: inline-block;
-            margin-top: 15px;
-            background: #e84545;
-            color: #fff;
-            padding: 10px 20px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: 0.3s ease;
-        }
-
-        .owner-btn:hover {
-            background: #d32f2f;
-        }
-
-        p {
-            margin-top: 10px;
-        }
     </style>
 </head>
+
 <body>
 
-<?php
-// Database connection
-$host = "localhost";
-$username = "root";
-$password = "";
-$database = "form_data";
-
-$conn = new mysqli($host, $username, $password, $database,3307);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
-// Handle form submission
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $name = $_POST['name'];
-    $contactNumber = $_POST['contactNumber'];
-    $collegeName = $_POST['collegeName'];
-    $gender = $_POST['gender'];
-
-    $stmt = $conn->prepare("INSERT INTO registrations (name, contactNumber, collegeName, gender) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("ssss", $name, $contactNumber, $collegeName, $gender);
-
-    if ($stmt->execute()) {
-        echo "<p style='color: green; text-align:center;'>Registration successful!</p>";
-        header("Location: student_dashboard.php?gender=" . $gender);
-        exit();
-    } else {
-        echo "<p style='color: red; text-align:center;'>Error: " . $stmt->error . "</p>";
-    }
-
-    $stmt->close();
-}
-$conn->close();
-?>
-
 <form id="myForm" method="post">
-    <h2>Participant Registration</h2>
+    <h2>Student Registration</h2>
 
     <label for="name">Name:</label>
     <input type="text" id="name" name="name" required>
@@ -148,6 +130,12 @@ $conn->close();
     <label for="collegeName">College Name:</label>
     <input type="text" id="collegeName" name="collegeName" required>
 
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required>
+
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required>
+
     <label for="gender">Gender:</label>
     <select id="gender" name="gender" required>
         <option value="">Select Gender</option>
@@ -157,8 +145,6 @@ $conn->close();
     </select>
 
     <button type="submit">Submit</button>
-
-    <!-- <a href="owner.php" class="owner-btn">Register as Owner</a> -->
 </form>
 
 </body>

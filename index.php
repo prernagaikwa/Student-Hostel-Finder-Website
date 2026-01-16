@@ -1,3 +1,8 @@
+<?php
+header("Location: home.php");
+exit();
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
